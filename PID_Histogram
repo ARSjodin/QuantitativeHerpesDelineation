@@ -1,0 +1,120 @@
+######### Read in Matrix ############
+
+herpesmat <- read.csv("data.csv", header=T)
+
+################ All Herpes Percent ID Historgram #################
+
+a.h <- data.matrix(herpesmat)
+#class(a.h)
+library(gdata)
+a.h2 <- upperTriangle(a.h, diag=FALSE)
+#class(a.h2)
+a.h.hist <- hist(x=a.h2, breaks=100, main = " ", 
+     xlab = " ", ylab = " ", xlim=c(30,100))
+abline(v=90, col="red", lwd = 4)
+abline(v=92, col="red", lty = 2, lwd = 4)
+abline(v=74, col="blue", lwd = 4)
+abline(v=80, col="blue", lty = 2, lwd = 4)
+legend("top", legend=c("74%", "80%", "90%", "92%"),
+       col=c("blue", "blue", "red", "red"), lty=c(1,2,1,2), cex = 1.75, lwd = 3,
+       y.intersp = 0.5, x.intersp = 0.25, bty = "n", ncol = 2)
+a.h.hist$counts
+
+
+## pairwise alignments instead of one total alignment ##
+
+source("https://bioconductor.org/biocLite.R")
+biocLite("Biostrings")
+library(Biostrings)
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("msa")
+library(msa)
+
+s <- readDNAStringSet("Herpes_OS_No_Noclep.fasta")
+s <- as.character(s) # msa requires string class, so this converts to a character string
+
+#test <- readDNAStringSet("Test_seqsUnpaired.fasta")
+#test <- as.character(test)
+#testmat <- matrix(, nrow=10, ncol=10)
+  
+#for(i in 1:nrow(testmat)) {
+#  x <- pairwiseAlignment(pattern=test, subject=test[i])
+#  testmat[i,] <- pid(x=x, type="PID1")
+#}
+### EHRMERGAWD IT WORKED!!
+
+
+mat <- matrix(, nrow=3131, ncol=3131)
+for(i in 1:nrow(mat)) {
+  x <- pairwiseAlignment(pattern=s, subject=s[i])
+  mat[i,] <- pid(x=x, type="PID1")
+}
+
+mat2 <- upperTriangle(mat, diag=FALSE)
+hist2 <- hist(x=mat2, breaks=100, main = " ", 
+     xlab=" ", ylab = " ", xlim=c(40,100))
+abline(v=90, col="red", lwd = 4)
+abline(v=93, col="red", lty = 2, lwd = 4)
+abline(v=75, col="blue", lwd = 4)
+abline(v=81, col="blue", lty = 2, lwd = 4)
+legend("top", legend=c("75%", "81%", "90%", "93%"),
+       col=c("blue", "blue", "red", "red"), lty=c(1,2,1,2), cex = 1.75, lwd = 3,
+       y.intersp = 0.5, x.intersp = 0.25, bty = "n", ncol = 2)
+
+hist2$counts
+
+mat.os <- matrix(, nrow=3140, ncol=3140)
+for(i in 1:nrow(mat.os)) {
+  x <- pairwiseAlignment(pattern=seqs, subject=seqs[i])
+  mat.os[i,] <- pid(x=x, type="PID1")
+}
+
+mat3 <- upperTriangle(mat.os, diag=FALSE)
+hist(x=mat3, breaks=50, main = " ", ylab = " ",
+     xlab=" ", xlim=c(20,100), cex.axis = 1.75)
+abline(v=91, col="red", lwd = 5)
+abline(v=79, col="blue", lwd = 5)
+legend(15, 500000, legend=c("91%", "79%"),col=c("red", "blue"), lty=1, lwd = 5,
+       cex = 1.75, pt.cex = 1, bty="n")
+
+
+################# Maximum identity within individuals ####################
+
+setwd("/Users/annarosesjodin/Documents/Dissertation/Herpes/Within")
+library(gdata)
+library(plotrix)
+
+files <- list.files("/Users/annarosesjodin/Documents/Dissertation/Herpes/Within")
+all <- lapply(files, read.csv)
+all <- data.matrix(all[1:length(files)])
+matrices <- lapply(all, upperTriangle)
+matrices <- as.numeric(unlist(matrices))
+
+  
+hist(x=matrices, breaks = 100, xlim=c(30,100), 
+     main = "Maximum Herpes Nucleotide Identity \nW/in Individual Bats (all)",
+     xlab = "Percent Identity")
+axis.break(axis=1, breakpos=c(from,to))
+
+hdata <- hist(matrices, breaks=50)
+from <- 2700
+to <- 5600
+gap.barplot(hdata$counts, xtics=hdata$breaks, gap=c(2700,5600), col="black", horiz=FALSE)
+axis.break(2, from, breakcol="snow", style="gap")
+axis.break(2, from*(1+0.02), breakcol="black", style="slash")
+axis.break(4, from*(1+0.02), breakcol="black", style="slash")
+
+matrices98 <- matrices[matrices<98]
+hist(x=matrices98, breaks = 100, xlim=c(30,100), 
+     main = "Maximum Herpes Nucleotide Identity \nW/in Individual Bats (98% cutoff)",
+     xlab = "Percent Identity")
+matrices95 <- matrices[matrices<95]
+hist(x=matrices95, breaks = 100, xlim=c(30,100),
+     main = "Maximum Herpes Nucleotide Identity \nW/in Individual Bats (95% cutoff)",
+     xlab = "Percent Identity")
+matrices94 <- matrices[matrices<94]
+hist(x=matrices94, breaks = 100, xlim=c(30,100),
+     main = "Maximum Herpes Nucleotide Identity \nW/in Individual Bats (94% cutoff)",
+     xlab = "Percent Identity")
+
+
